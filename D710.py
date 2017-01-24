@@ -136,7 +136,7 @@ def main(h, com=None):
                     except fap.DecodeError:
                         # A Decode Error will occur whenever FAP is unable to parse the packet
                         # In this case, check to see if the packet is a GPRMC or PKWDPOS packet
-                        gpscompatible = decodeTNC.determineCompatability(out, ["$PKWDPOS", "$GPRMC"])
+                        gpscompatible = decodeTNC.determineCompatability(out, ["$PKWDPOS", "$GPRMC", "$GPGGA"])
                         if gpscompatible:
                             # If it is a D710 packet, parse it.
                             latlong = decodeTNC.latlong(out)  # returned as (latitude,longitude)

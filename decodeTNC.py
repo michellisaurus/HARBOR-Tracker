@@ -5,10 +5,7 @@ decodeTNC.py is a module for a HAM Radio tracking program for the HARBOR High Al
 Ian Sohl
 """
 import re
-
 done = False
-
-
 def delimit(rawdata):
     """Delimit APRS and D710 packets into constituent parts"""
     # For PKWDPOS D710 Packets
@@ -26,7 +23,14 @@ def delimit(rawdata):
         splitonce = rawdata.split(',')
         # If the data matches, return
         if 'N' in splitonce[4] and 'W' in splitonce[6]:
-            returnable = [splitonce[3] + "N", splitonce[5] + "W"]
+            returnable = [splitonce[3] + splitonce[4], splitonce[5] + splitonce[6]]
+            return returnable
+    if "GPGGA" in rawdata:
+        # Accepts sentence format: $GPGGA,hhmmss.ss,ddmm.mmmmm,N,dddmm.mmmmm,E,2,12,0.91,69.8,M,16.3,M,,*65
+        # Split on commas
+        splitonce = rawdata.split(',')
+        if 'N' in splitonce[3] and 'W' in splitonce[5]:# We may be able to remove this line if we do a checksum
+            returnable = [splitonce[2] + splitonce[3], splitonce[4] + splitonce[5]]
             return returnable
     # For APRS packets (deprecated, use FAP when possible)
     else:
@@ -40,12 +44,21 @@ def delimit(rawdata):
 
 
 def latlong(newdata):
+    global latsign, longsign
     """Return the latitude and longitude of a given packet"""
     # Delimit the data to determine correct chunks
     output = delimit(newdata)
+    if "W" in output[1]:
+        longsign = '-'
+    else:
+        longsign = ''
+    if "S" in output[0]:
+        latsign = '-'
+    else:
+        latsign = ''
     # Convert latitude and longitude from Degrees:minutes to decimal degrees
-    latitude = str(float(output[0][:2]) + (float(output[0][2:7]) / 60))
-    longitude = "-" + str(float(output[1][:3]) + (float(output[1][3:8]) / 60))
+    latitude = latsign + str(float(output[0][:2]) + (float(output[0][2:7]) / 60))
+    longitude = longsign + str(float(output[1][:3]) + (float(output[1][3:8]) / 60))
     # I know, it's terrible...
     return longitude, latitude
 
